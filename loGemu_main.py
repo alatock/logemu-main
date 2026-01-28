@@ -46,7 +46,7 @@ y = 0
 
 
 
-def program_encoding(code, registers, matrix):
+def program_encoding(code, registers):
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
@@ -83,9 +83,8 @@ def program_encoding(code, registers, matrix):
                     pass
                 if prt6 == "1":
                     pass
-                pass
             
-
+                pass
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
         
@@ -95,6 +94,9 @@ def program_encoding(code, registers, matrix):
         if opcode == "sbi":
             registers[prt5] = registers[prt7] - int(prt6)
             pass
+
+        
+
 
         if opcode == "jmp":
             label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
@@ -135,6 +137,9 @@ def program_encoding(code, registers, matrix):
             if registers[prt7] < registers[prt6]:
                 str_col2 = labels[label_jump] - 1
             pass
+        if opcode == "irp":
+            if prt7 == "5":
+                    registers[prt5] = int(input())
 
         if opcode == "non":
             pass
