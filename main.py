@@ -1,6 +1,7 @@
 import numpy as np
 import re
 import cv2
+import time
 
 with open (r"C:\Users\Asus\Desktop\c++\loGemu folder\logemu\bresenhm alg logemu ver.txt", "r", encoding= 'utf-8') as file:
     code = file.readlines()
@@ -33,7 +34,6 @@ SCALE = 12
 
 
 # Пиксельная матрица (H, W, RGB)
-matrix = np.zeros((H, W, 3), dtype=np.uint8)
 
 
 
@@ -49,6 +49,7 @@ def program_encoding(code, registers, matrix):
     print("emulation.console:\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
+        print (f"currocde: {line}")
         stropcodes = re.findall(r"\(([0-9_]+)\)", line)
         prt3, prt5, prt6, prt7 = stropcodes
         
@@ -76,21 +77,9 @@ def program_encoding(code, registers, matrix):
         if opcode == "onp":
             if prt7 == "3":
                 if prt6 == "2":
-                    matrix.fill(0)
+                    pass
                 if prt6 == "1":
-                    matrix = np.zeros((H, W, 3), dtype=np.uint8)
-                    
-                    matrix[y, x] = 255
-
-                    display = cv2.resize(
-                        matrix,
-                        (W * SCALE, H * SCALE),
-                        interpolation=cv2.INTER_NEAREST
-                    )
-
-                    cv2.imshow('Screen', display)
-                    cv2.waitKey(0)
-                    cv2.destroyAllWindows()
+                    pass
                 pass
             
 
@@ -117,7 +106,7 @@ def program_encoding(code, registers, matrix):
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] == registers[prt6]:
-                str_col2 = labels[label_jump]
+                str_col2 = labels[label_jump] - 1
 
             pass
         if opcode == "brn":
@@ -125,7 +114,7 @@ def program_encoding(code, registers, matrix):
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] == int(prt6):
-                str_col2 = labels[label_jump]
+                str_col2 = labels[label_jump] - 1
 
             pass
         if opcode == "brp":
@@ -133,7 +122,7 @@ def program_encoding(code, registers, matrix):
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] > registers[prt6]:
-                str_col2 = labels[label_jump]
+                str_col2 = labels[label_jump] - 1
 
             pass
         if opcode == "brm":
@@ -141,8 +130,7 @@ def program_encoding(code, registers, matrix):
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] < registers[prt6]:
-                str_col2 = labels[label_jump]
-
+                str_col2 = labels[label_jump] - 1
             pass
 
         if opcode == "non":
@@ -154,6 +142,7 @@ def program_encoding(code, registers, matrix):
             str_col2 = str_col2
         else:
             str_col2 += 1
+        time.sleep(0.4)
 
         
 def lables_encoding():
@@ -182,5 +171,5 @@ if __name__=='__main__':
             None
             
         str_col = str_col + 1
-program_encoding(code, registers, matrix)    
+program_encoding(code, registers)    
     
