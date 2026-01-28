@@ -58,6 +58,11 @@ def program_encoding(code, registers):
             if prt7 == "5":
                 print(f"reg:{prt6}", registers[prt6])
             pass
+        if opcode == "onp":
+            if prt7 == "3":
+                pass
+            
+
 
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
