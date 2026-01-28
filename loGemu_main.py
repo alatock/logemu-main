@@ -2,8 +2,11 @@ import numpy as np
 import re
 import cv2
 import time
+from pathlib import Path
 
-with open (r"C:\Users\Asus\Desktop\c++\loGemu folder\logemu\bresenhm alg logemu ver.txt", "r", encoding= 'utf-8') as file:
+runfile = Path(__file__).parent
+exec_file = runfile / 'main_code.txt'
+with open (exec_file, "r", encoding= 'utf-8') as file:
     code = file.readlines()
     pass
 
@@ -33,7 +36,7 @@ W, H = 64, 64
 SCALE = 12
 
 
-# Пиксельная матрица (H, W, RGB)
+
 
 
 
@@ -142,7 +145,6 @@ def program_encoding(code, registers, matrix):
             str_col2 = str_col2
         else:
             str_col2 += 1
-        time.sleep(0.4)
 
         
 def lables_encoding():
