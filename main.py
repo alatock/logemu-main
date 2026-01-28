@@ -1,14 +1,10 @@
-import numpy
+import numpy as np
 import re
 import cv2
 
-code = [
-    "adi (0)(1)(8)(1)",
-    "sub (0)(1)(1)(0)",
-    "orp (0)(0)(1)(5)",
-    "hlt (0)(0)(0)(0)[LB2]",
-    "[STP]"
-]
+with open (r"C:\Users\Asus\Desktop\c++\loGemu folder\logemu\bresenhm alg logemu ver.txt", "r", encoding= 'utf-8') as file:
+    code = file.readlines()
+    pass
 
 labels = {}
 
@@ -32,9 +28,22 @@ registers = {
     
 }
 
+W, H = 64, 64
+SCALE = 12
 
 
-def program_encoding(code, registers):
+# Пиксельная матрица (H, W, RGB)
+matrix = np.zeros((H, W, 3), dtype=np.uint8)
+
+
+
+
+x = 0
+y = 0
+
+
+
+def program_encoding(code, registers, matrix):
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
@@ -57,15 +66,39 @@ def program_encoding(code, registers):
         if opcode == "orp":
             if prt7 == "5":
                 print(f"reg:{prt6}", registers[prt6])
+            if prt7 == "1":
+                x = registers[prt6]
+                pass
+            if prt7 == "2":
+                y= registers[prt6]
+                pass
             pass
         if opcode == "onp":
             if prt7 == "3":
+                if prt6 == "2":
+                    matrix.fill(0)
+                if prt6 == "1":
+                    matrix = np.zeros((H, W, 3), dtype=np.uint8)
+                    
+                    matrix[y, x] = 255
+
+                    display = cv2.resize(
+                        matrix,
+                        (W * SCALE, H * SCALE),
+                        interpolation=cv2.INTER_NEAREST
+                    )
+
+                    cv2.imshow('Screen', display)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
                 pass
             
 
-
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
+        
+        if opcode == "ldi":
+            registers[prt5] = int(prt6)
 
         if opcode == "sbi":
             registers[prt5] = registers[prt7] - int(prt6)
@@ -149,5 +182,5 @@ if __name__=='__main__':
             None
             
         str_col = str_col + 1
-program_encoding(code, registers)    
+program_encoding(code, registers, matrix)    
     
