@@ -102,7 +102,7 @@ def program_encoding(code, registers, ram):
 
 
         if opcode == "jmp":
-            label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
+            label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             str_col2 = labels[label_jump]
@@ -110,7 +110,7 @@ def program_encoding(code, registers, ram):
             
         
         if opcode == "brh":
-            label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
+            label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] == registers[prt6]:
@@ -118,7 +118,7 @@ def program_encoding(code, registers, ram):
 
             pass
         if opcode == "brn":
-            label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
+            label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] == int(prt6):
@@ -126,7 +126,7 @@ def program_encoding(code, registers, ram):
 
             pass
         if opcode == "brp":
-            label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
+            label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] > registers[prt6]:
@@ -134,7 +134,7 @@ def program_encoding(code, registers, ram):
 
             pass
         if opcode == "brm":
-            label_jump = re.search(r"\{([A-Z0-9_]+)\}", line)
+            label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             if registers[prt7] < registers[prt6]:
@@ -179,7 +179,7 @@ if __name__=='__main__':
     while executing2 == False and str_col < len(code):
         line = code[str_col]
         
-        label_assig = re.search(r"\[([A-Z0-9_]+)\]", line)
+        label_assig = re.search(r"\[([A-Za-z0-9_]+)\]", line)
         
         if label_assig is not None:  # Проверяем, что поиск дал результат
             label2 = label_assig.group(1)  # Теперь можно безопасно вызывать group()
