@@ -31,6 +31,9 @@ registers = {
     
     
 }
+ram = []
+ram = np.zeros(2048, dtype=int)
+
 
 W, H = 64, 64
 SCALE = 12
@@ -46,7 +49,7 @@ y = 0
 
 
 
-def program_encoding(code, registers):
+def program_encoding(code, registers, ram):
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
@@ -140,6 +143,20 @@ def program_encoding(code, registers):
         if opcode == "irp":
             if prt7 == "5":
                     registers[prt5] = int(input())
+        
+        if opcode == "lrm":
+            registers[prt5] = ram[int(prt6)]
+        if opcode == "rlm":
+            registers[prt6] = ram[registers[prt5]]
+        if opcode == "wrm":
+            ram[int(prt6)] = registers[prt7]
+        if opcode == "wnm":
+            ram[int(prt6)] = int(prt7)
+        if opcode == "rwm":
+            ram[registers[prt7]] = registers[prt6]
+        
+            
+    
 
         if opcode == "non":
             pass
@@ -150,6 +167,7 @@ def program_encoding(code, registers):
             str_col2 = str_col2
         else:
             str_col2 += 1
+        time.sleep(0.6)
 
         
 def lables_encoding():
@@ -178,5 +196,5 @@ if __name__=='__main__':
             None
             
         str_col = str_col + 1
-program_encoding(code, registers)    
+program_encoding(code, registers, ram)    
     
