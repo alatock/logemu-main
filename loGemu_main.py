@@ -1,14 +1,17 @@
 import numpy as np
 import re
-import cv2
+
 import time
 from pathlib import Path
+from pixel_window import PixelWindow
 
 runfile = Path(__file__).parent
 exec_file = runfile / 'main_code.txt'
 with open (exec_file, "r", encoding= 'utf-8') as file:
     code = file.readlines()
     pass
+
+
 
 labels = {}
 
@@ -38,18 +41,16 @@ ram = np.zeros(2048, dtype=int)
 W, H = 64, 64
 SCALE = 12
 
-
-
-
-
-
-
 x = 0
 y = 0
 
+win = PixelWindow(64, 64, scale=8)
+
+matrix = np.zeros((64, 64), dtype=np.uint8)
 
 
-def program_encoding(code, registers, ram):
+def program_encoding(code, registers, ram, x, y):
+    global matrix
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
@@ -77,16 +78,25 @@ def program_encoding(code, registers, ram):
                 x = registers[prt6]
                 pass
             if prt7 == "2":
-                y= registers[prt6]
+                y = registers[prt6]
                 pass
             pass
         if opcode == "onp":
             if prt7 == "3":
                 if prt6 == "2":
+                    win.fill(0)
                     pass
                 if prt6 == "1":
+                    win.set_pixel(x, y, 1)
                     pass
-            
+                if prt6 == "3":
+                    win.close()
+                if prt6 == "4":
+                    matrix[x,y] = 1
+                if prt6 == "5":
+                    win.draw(matrix)
+                if prt6 == "6":
+                    matrix = np.zeros((64, 64), dtype=np.uint8)
                 pass
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
@@ -167,7 +177,7 @@ def program_encoding(code, registers, ram):
             str_col2 = str_col2
         else:
             str_col2 += 1
-        time.sleep(0.6)
+        #time.sleep(0.5)
 
         
 def lables_encoding():
@@ -194,7 +204,6 @@ if __name__=='__main__':
             print(f"Добавлен лейбл: {label2} -> {str_col}")
         else:
             None
-            
         str_col = str_col + 1
-program_encoding(code, registers, ram)    
+program_encoding(code, registers, ram, x, y)    
     
