@@ -80,6 +80,8 @@ def program_encoding(code, registers, ram, x, y):
             if prt7 == "2":
                 y = registers[prt6]
                 pass
+            if prt7 == "3": 
+                print(chr(registers[prt6]), end= '')
             pass
         if opcode == "onp":
             if prt7 == "3":
@@ -164,10 +166,24 @@ def program_encoding(code, registers, ram, x, y):
             ram[int(prt6)] = int(prt7)
         if opcode == "rwm":
             ram[registers[prt7]] = registers[prt6]
-        
-            
-    
-
+        if opcode == "crg":
+            registers = {
+                "0":0,
+                "1":0,
+                "2":0,
+                "3":0,
+                "4":0,
+                "5":0,
+                "6":0,
+                "7":0,
+                "8":0,
+                "9":0,
+                "10":0,
+                "12":0,
+                "13":0,
+                "14":0,
+                "15":0   
+            }
         if opcode == "non":
             pass
         if opcode == "hlt":
