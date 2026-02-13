@@ -4,6 +4,9 @@ import re
 import time
 from pathlib import Path
 from pixel_window import PixelWindow
+from ascii_keyboard import ASCIIKeyboard
+kb = ASCIIKeyboard()
+kb.start()
 
 runfile = Path(__file__).parent
 exec_file = runfile / 'main_code.txt'
@@ -11,7 +14,7 @@ with open (exec_file, "r", encoding= 'utf-8') as file:
     code = file.readlines()
     pass
 
-
+programmer_mod = False
 
 labels = {}
 
@@ -43,20 +46,21 @@ SCALE = 12
 
 x = 0
 y = 0
-
+charbuff = ""
 win = PixelWindow(64, 64, scale=8)
 
 matrix = np.zeros((64, 64), dtype=np.uint8)
 
 
-def program_encoding(code, registers, ram, x, y):
+def program_encoding(code, registers, ram, x, y, charbuff):
     global matrix
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
-        print (f"currocde: {line}")
+        if programmer_mod == True:
+                    print (f"currocde: {line}")
         stropcodes = re.findall(r"\(([0-9_]+)\)", line)
         prt3, prt5, prt6, prt7 = stropcodes
         
@@ -66,11 +70,14 @@ def program_encoding(code, registers, ram, x, y):
         if opcode == "add":
             registers[prt5] = registers[prt7] + registers[prt6]
             pass
+        if opcode == "mul":
+            registers[prt5] = registers[prt7] * registers[prt6]
+        if opcode == "div":
+            registers[prt5] = registers[prt7] / registers[prt6]
 
         if opcode == "sub":
             registers[prt5] = registers[prt7] - registers[prt6]
             pass
-
         if opcode == "orp":
             if prt7 == "5":
                 print(f"reg:{prt6}", registers[prt6])
@@ -81,9 +88,13 @@ def program_encoding(code, registers, ram, x, y):
                 y = registers[prt6]
                 pass
             if prt7 == "3": 
-                print(chr(registers[prt6]), end= '')
+                charbuff = charbuff + chr(registers[prt6])
             pass
         if opcode == "onp":
+            if prt7 == "2":
+                if prt6 == "1":
+                    print(f"terminal: {charbuff}")
+                    pass
             if prt7 == "3":
                 if prt6 == "2":
                     win.fill(0)
@@ -102,7 +113,10 @@ def program_encoding(code, registers, ram, x, y):
                 pass
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
-        
+        if opcode == "mli":
+            registers[prt5] = registers[prt7] * int(prt6)
+        if opcode == "dvi":
+            registers[prt5] = registers[prt7] / int(prt6)
         if opcode == "ldi":
             registers[prt5] = int(prt6)
 
@@ -155,6 +169,9 @@ def program_encoding(code, registers, ram, x, y):
         if opcode == "irp":
             if prt7 == "5":
                     registers[prt5] = int(input())
+            if prt7 == "3":
+                    registers[prt5] = kb.get_ascii_code()   
+                    
         
         if opcode == "lrm":
             registers[prt5] = ram[int(prt6)]
@@ -188,12 +205,14 @@ def program_encoding(code, registers, ram, x, y):
             pass
         if opcode == "hlt":
             executing = True
-            continue
+            print("success execute!")
+            break
         if opcode == "jmp":
             str_col2 = str_col2
         else:
             str_col2 += 1
-        #time.sleep(0.5)
+        if programmer_mod == True:
+                time.sleep(0.6)
 
         
 def lables_encoding():
@@ -221,5 +240,5 @@ if __name__=='__main__':
         else:
             None
         str_col = str_col + 1
-program_encoding(code, registers, ram, x, y)    
+program_encoding(code, registers, ram, x, y, charbuff)    
     
