@@ -49,11 +49,10 @@ y = 0
 charbuff = ""
 win = PixelWindow(64, 64, scale=8)
 
-matrix = np.zeros((64, 64), dtype=np.uint8)
+matrix = np.zeros((64, 64), dtype=int)
 
 
-def program_encoding(code, registers, ram, x, y, charbuff):
-    global matrix
+def program_encoding(code, registers, ram, x, y, charbuff, matrix):
     executing = False
     str_col2 = 0
     print("emulation.console:\n")
@@ -87,7 +86,7 @@ def program_encoding(code, registers, ram, x, y, charbuff):
             if prt7 == "2":
                 y = registers[prt6]
                 pass
-            if prt7 == "3": 
+            if prt7 == "3":
                 charbuff = charbuff + chr(registers[prt6])
             pass
         if opcode == "onp":
@@ -211,6 +210,7 @@ def program_encoding(code, registers, ram, x, y, charbuff):
             str_col2 = str_col2
         else:
             str_col2 += 1
+        time.sleep(0.002)
         if programmer_mod == True:
                 time.sleep(0.6)
 
@@ -240,5 +240,5 @@ if __name__=='__main__':
         else:
             None
         str_col = str_col + 1
-program_encoding(code, registers, ram, x, y, charbuff)    
+program_encoding(code, registers, ram, x, y, charbuff, matrix)    
     

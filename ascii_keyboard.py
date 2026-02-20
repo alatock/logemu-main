@@ -9,6 +9,7 @@ class ASCIIKeyboard:
         )
 
     def _on_press(self, key):
+        
         try:
             # Обычные символы (буквы, цифры, знаки)
             self.last_char = key.char
@@ -17,6 +18,7 @@ class ASCIIKeyboard:
             self.last_char = None
 
     def _on_release(self, key):
+        self.last_char = None
         pass
 
     def start(self):
@@ -35,4 +37,4 @@ class ASCIIKeyboard:
         """
         if self.last_char is not None:
             return ord(self.last_char)
-        return None
+        else: return 0
