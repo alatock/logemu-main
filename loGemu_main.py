@@ -7,9 +7,10 @@ from pixel_window import PixelWindow
 from ascii_keyboard import ASCIIKeyboard
 kb = ASCIIKeyboard()
 kb.start()
+main_file = "main_code.txt"
 
 runfile = Path(__file__).parent
-exec_file = runfile / 'main_code.txt'
+exec_file = runfile / main_file
 with open (exec_file, "r", encoding= 'utf-8') as file:
     code = file.readlines()
     pass
@@ -51,10 +52,14 @@ win = PixelWindow(64, 64, scale=8)
 
 matrix = np.zeros((64, 64), dtype=int)
 
+main_branch = False
 
-def program_encoding(code, registers, ram, x, y, charbuff, matrix):
+def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, main_branch):
     executing = False
-    str_col2 = 0
+    print("count",old_count)
+    str_col2 = old_count 
+    print("count2",str_col2)
+
     print("emulation.console:\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
@@ -62,7 +67,6 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix):
                     print (f"currocde: {line}")
         stropcodes = re.findall(r"\(([0-9_]+)\)", line)
         prt3, prt5, prt6, prt7 = stropcodes
-        
 
         opcode = re.search(r"([a-z_]+)", line)
         opcode = opcode.group(1)
@@ -123,16 +127,36 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix):
             registers[prt5] = registers[prt7] - int(prt6)
             pass
 
-        
-
-
         if opcode == "jmp":
             label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
             label_jump = str(label_jump)
             str_col2 = labels[label_jump]
             pass
-            
+        if opcode == "gmp":
+            sys_jump = re.search(r"\{([A-Za-z0-9._]+)\}", line)
+            sys_jump = sys_jump.group(1)
+            sys_jump = str(sys_jump)
+            print(sys_jump)
+            old_count = str_col2
+            print("old",old_count)
+            if sys_jump == "main":
+                exec_file = runfile / main_file
+                main_branch = False
+            else:
+                exec_file = runfile / 'rmdc' / sys_jump
+                main_branch = True
+                old_count = 0
+            print(exec_file)
+            with open (exec_file, "r", encoding= 'utf-8') as file:
+                    code = file.readlines()
+                    pass
+            lables_encoding(code)
+            program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, main_branch)
+
+
+
+
         
         if opcode == "brh":
             label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
@@ -180,6 +204,21 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix):
             ram[int(prt6)] = registers[prt7]
         if opcode == "wnm":
             ram[int(prt6)] = int(prt7)
+        if opcode == "wam":
+            str_code = str(line)
+            array_ram = re.findall(r'\[(.*?)\]',str_code)
+            array_ram = str(array_ram)
+            array_ram = array_ram.replace("'", "")
+            array_ram = array_ram.replace("[", "")
+            array_ram = array_ram.replace("]", "")
+            array_ram = array_ram.split(",")
+            symb_c = len(array_ram)
+            symb_ct = 0
+            for symb_c in array_ram:
+                ram[symb_ct +int(prt6)] = int(array_ram[symb_ct])
+                symb_ct += 1
+                symb_c =- 1
+
         if opcode == "rwm":
             ram[registers[prt7]] = registers[prt6]
         if opcode == "crg":
@@ -210,17 +249,14 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix):
             str_col2 = str_col2
         else:
             str_col2 += 1
-        time.sleep(0.002)
+        time.sleep(0.0001)
         if programmer_mod == True:
                 time.sleep(0.6)
 
         
-def lables_encoding():
-    pass
-if __name__=='__main__':
+def lables_encoding(code):
     executing2 = False
     str_col = 0
-    
     while executing2 == False and str_col < len(code):
         line = code[str_col]
         
@@ -240,5 +276,11 @@ if __name__=='__main__':
         else:
             None
         str_col = str_col + 1
-program_encoding(code, registers, ram, x, y, charbuff, matrix)    
+
+    pass
+
+if __name__=='__main__':
+        old_count = 0
+        lables_encoding(code)
+        program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, main_branch, old_count) 
     
