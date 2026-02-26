@@ -52,14 +52,16 @@ win = PixelWindow(64, 64, scale=8)
 
 matrix = np.zeros((64, 64), dtype=int)
 
-main_branch = False
+main_branch = True
 
-def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, main_branch):
+def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump):
     executing = False
-    print("count",old_count)
-    str_col2 = old_count 
-    print("count2",str_col2)
-
+    global main_branch
+    if main_branch == True:
+        str_col2 = old_count
+    else:str_col2 = 0
+  
+    
     print("emulation.console:\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
@@ -137,27 +139,31 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             sys_jump = re.search(r"\{([A-Za-z0-9._]+)\}", line)
             sys_jump = sys_jump.group(1)
             sys_jump = str(sys_jump)
-            print(sys_jump)
-            old_count = str_col2
-            print("old",old_count)
             if sys_jump == "main":
+                if programmer_mod == True:
+                    print("sc main")
                 exec_file = runfile / main_file
-                main_branch = False
-            else:
-                exec_file = runfile / 'rmdc' / sys_jump
                 main_branch = True
-                old_count = 0
-            print(exec_file)
-            with open (exec_file, "r", encoding= 'utf-8') as file:
-                    code = file.readlines()
-                    pass
+                old_count = old_count
+                with open (exec_file, "r", encoding= 'utf-8') as file:
+                        code = file.readlines()
+                        pass
+            else:
+                if programmer_mod == True:
+                    print("sc glob")
+                if main_branch == True:
+                    old_count = str_col2 + 1
+                else:old_count = 0
+                exec_file = runfile / 'rmdc' / sys_jump
+                if programmer_mod == True:
+                    print(exec_file)
+                main_branch = False
+                with open (exec_file, "r", encoding= 'utf-8') as file:
+                        code = file.readlines()
+                        pass
             lables_encoding(code)
-            program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, main_branch)
+            program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump)
 
-
-
-
-        
         if opcode == "brh":
             label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
@@ -242,16 +248,16 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         if opcode == "non":
             pass
         if opcode == "hlt":
-            executing = True
             print("success execute!")
-            break
+            executing = True
+            exit()
         if opcode == "jmp":
             str_col2 = str_col2
         else:
             str_col2 += 1
         time.sleep(0.0001)
         if programmer_mod == True:
-                time.sleep(0.6)
+                time.sleep(0.3)
 
         
 def lables_encoding(code):
@@ -263,8 +269,9 @@ def lables_encoding(code):
         label_assig = re.search(r"\[([A-Za-z0-9_]+)\]", line)
         
         if label_assig is not None:  # Проверяем, что поиск дал результат
-            label2 = label_assig.group(1)  # Теперь можно безопасно вызывать group()
-            print(f"Имя лейбла: {label2}")
+            label2 = label_assig.group(1)
+            if programmer_mod == True:  # Теперь можно безопасно вызывать group()
+                print(f"Имя лейбла: {label2}")
             
             if label2 == "STP":
                 executing2 = True
@@ -272,7 +279,8 @@ def lables_encoding(code):
                 continue
             
             labels[label2] = str_col
-            print(f"Добавлен лейбл: {label2} -> {str_col}")
+            if programmer_mod == True:
+                print(f"Добавлен лейбл: {label2} -> {str_col}")
         else:
             None
         str_col = str_col + 1
@@ -281,6 +289,7 @@ def lables_encoding(code):
 
 if __name__=='__main__':
         old_count = 0
+        sys_jump = ""
         lables_encoding(code)
-        program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, main_branch, old_count) 
+        program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump) 
     
