@@ -1,77 +1,82 @@
 import pygame
 import numpy as np
 import threading
-import time
 
 class PixelWindow:
     def __init__(self, width, height, scale=10, title="Pixel Window", fps=60):
-        pygame.init()
         self.width = width
         self.height = height
         self.scale = scale
         self.fps = fps
-
-        self.screen = pygame.display.set_mode((width*scale, height*scale))
-        pygame.display.set_caption(title)
-
-        self.surface = pygame.Surface((width, height))
-        self.clock = pygame.time.Clock()
-
-        # черно-белая матрица (0=черный, 1=белый)
-        self.matrix = np.zeros((height, width), dtype=np.uint8)
         self.running = True
         self._lock = threading.Lock()
+        
+        # Матрица данных
+        self.matrix = np.zeros((height, width), dtype=np.uint8)
 
-        # поток без daemon
-        self.thread = threading.Thread(target=self._loop, daemon=False)
-        self.thread.start()
+        # Запускаем Pygame в главном потоке, а для управления логикой 
+        # (если нужно) можно создать отдельный поток. 
+        # Но отрисовку оставим здесь.
+        self._init_pygame(title)
 
-    def draw(self, matrix=None):
-        """
-        Отрисовать матрицу на экране.
-        matrix: если передана, заменяет текущую матрицу (0/1)
-        """
-        with self._lock:
-            if matrix is not None:
-                matrix = np.array(matrix, dtype=np.uint8)
-                if matrix.shape != (self.height, self.width):
-                    raise ValueError(f"Matrix shape must be ({self.height}, {self.width})")
-                self.matrix[:] = matrix
-
-            # конвертируем 0/1 в RGB
-            rgb_matrix = np.stack([self.matrix*255]*3, axis=-1)
-            pygame.surfarray.blit_array(self.surface, rgb_matrix.swapaxes(0,1))
-
-        scaled = pygame.transform.scale(self.surface, (self.width*self.scale, self.height*self.scale))
-        self.screen.blit(scaled, (0,0))
-        pygame.display.flip()
+    def _init_pygame(self, title):
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.width * self.scale, self.height * self.scale))
+        pygame.display.set_caption(title)
+        self.surface = pygame.Surface((self.width, self.height))
+        self.clock = pygame.time.Clock()
 
     def set_pixel(self, x, y, value):
-        """
-        Установить один пиксель
-        value: 0 или 1
-        """
         if 0 <= x < self.width and 0 <= y < self.height:
             with self._lock:
                 self.matrix[y, x] = 1 if value else 0
-        else:
-            raise ValueError("Координаты за пределами матрицы")
 
     def fill(self, value):
-        """Залить весь экран 0 или 1"""
         with self._lock:
             self.matrix[:, :] = 1 if value else 0
 
-    def _loop(self):
+    def render(self):
+        """Метод отрисовки — вызывается ТОЛЬКО в основном цикле"""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+        with self._lock:
+            # Создаем RGB массив. В Pygame surfarray использует (X, Y)
+            # Транспонируем матрицу, чтобы она соответствовала осям Pygame
+            rgb_matrix = np.stack([self.matrix.T * 255] * 3, axis=-1)
+            pygame.surfarray.blit_array(self.surface, rgb_matrix)
+
+        # Масштабируем и выводим
+        scaled = pygame.transform.scale(
+            self.surface, 
+            (self.width * self.scale, self.height * self.scale)
+        )
+        self.screen.blit(scaled, (0, 0))
+        pygame.display.flip()
+
+    def run(self):
+        """Основной цикл приложения"""
         while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-            self.draw()  # обновляем экран каждый кадр
+            self.render()
             self.clock.tick(self.fps)
         pygame.quit()
 
-    def close(self):
-        """Закрыть окно корректно"""
-        self.running = False
-        self.thread.join()
+# Пример использования:
+if __name__ == "__main__":
+    win = PixelWindow(64, 64, scale=8)
+    
+    # Можно запустить поток, который будет что-то рисовать в фоне
+    def background_logic():
+        x = 0
+        while win.running:
+            win.set_pixel(x % 64, 32, 1)
+            x += 1
+            import time
+            time.sleep(0.05)
+
+    logic_thread = threading.Thread(target=background_logic, daemon=True)
+    logic_thread.start()
+
+    # Основной поток занят только окном
+    win.run()

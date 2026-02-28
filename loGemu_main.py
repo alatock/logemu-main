@@ -1,6 +1,7 @@
 import numpy as np
 import re
-
+import threading
+import pygame
 import time
 from pathlib import Path
 from pixel_window import PixelWindow
@@ -67,7 +68,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         line = code[str_col2]
         if programmer_mod == True:
                     print (f"currocde: {line}")
-        stropcodes = re.findall(r"\(([0-9_]+)\)", line)
+        stropcodes = re.findall(r"\(([0-9-_]+)\)", line)
         prt3, prt5, prt6, prt7 = stropcodes
 
         opcode = re.search(r"([a-z_]+)", line)
@@ -255,7 +256,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 = str_col2
         else:
             str_col2 += 1
-        time.sleep(0.0001)
+        time.sleep(0.0000001)
         if programmer_mod == True:
                 time.sleep(0.3)
 
@@ -288,8 +289,28 @@ def lables_encoding(code):
     pass
 
 if __name__=='__main__':
-        old_count = 0
-        sys_jump = ""
-        lables_encoding(code)
-        program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump) 
-    
+         win = PixelWindow(64, 64, scale=8)
+
+         # 2. Подготавливаем данные для эмулятора
+         old_count = 0
+         sys_jump = ""
+         lables_encoding(code)
+     
+         # 3. Запускаем эмулятор в побочном потоке
+         emu_thread = threading.Thread(
+             target=program_encoding,
+             args=(code, registers, ram, x, y, charbuff, matrix, runfile,
+                   main_file, old_count, sys_jump),
+             daemon=True  # Поток умрет при закрытии программы
+         )
+     
+         emu_thread.start()
+     
+         # 4. ГЛАВНЫЙ ЦИКЛ программы: здесь живет PyGame
+         clock = pygame.time.Clock()
+     
+         while win.running:
+             win.render()
+             clock.tick(1000)  # Ограничиваем FPS интерфейса, чтобы не грузить CPU
+     
+         pygame.quit()
