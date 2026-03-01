@@ -164,7 +164,8 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
                         pass
             lables_encoding(code)
             program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump)
-
+        if opcode == "mov":
+            registers[prt5] = registers[prt7]
         if opcode == "brh":
             label_jump = re.search(r"\{([A-Za-z0-9_]+)\}", line)
             label_jump = label_jump.group(1)
@@ -258,7 +259,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 += 1
         time.sleep(0.0000001)
         if programmer_mod == True:
-                time.sleep(0.3)
+                time.sleep(0.1)
 
         
 def lables_encoding(code):
