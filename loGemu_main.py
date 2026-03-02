@@ -68,7 +68,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         line = code[str_col2]
         if programmer_mod == True:
                     print (f"currocde: {line}")
-        stropcodes = re.findall(r"\(([0-9-_]+)\)", line)
+        stropcodes = re.findall(r"\(([0-9-._]+)\)", line)
         prt3, prt5, prt6, prt7 = stropcodes
 
         opcode = re.search(r"([a-z_]+)", line)
@@ -85,6 +85,8 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             registers[prt5] = registers[prt7] - registers[prt6]
             pass
         if opcode == "orp":
+            if prt7 == "4":
+               print(chr(registers[prt6]), end="", flush=True)
             if prt7 == "5":
                 print(f"reg:{prt6}", registers[prt6])
             if prt7 == "1":
@@ -113,10 +115,11 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
                 if prt6 == "4":
                     matrix[x,y] = 1
                 if prt6 == "5":
-                    win.draw(matrix)
+                    win.render(matrix)
                 if prt6 == "6":
                     matrix = np.zeros((64, 64), dtype=np.uint8)
                 pass
+        
         if opcode == "adi":
             registers[prt5] = registers[prt7] + int(prt6)
         if opcode == "mli":
@@ -124,7 +127,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         if opcode == "dvi":
             registers[prt5] = registers[prt7] / int(prt6)
         if opcode == "ldi":
-            registers[prt5] = int(prt6)
+            registers[prt5] = float(prt6)
 
         if opcode == "sbi":
             registers[prt5] = registers[prt7] - int(prt6)
@@ -198,10 +201,10 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
                 str_col2 = labels[label_jump] - 1
             pass
         if opcode == "irp":
-            if prt7 == "5":
-                    registers[prt5] = int(input())
             if prt7 == "3":
-                    registers[prt5] = kb.get_ascii_code()   
+                    registers[prt5] = kb.get_ascii_code()
+            if prt7 == "4":
+                    registers[prt5] = kb.get_ascii_rel()
                     
         
         if opcode == "lrm":
@@ -259,7 +262,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 += 1
         time.sleep(0.0000001)
         if programmer_mod == True:
-                time.sleep(0.1)
+                time.sleep(0.4)
 
         
 def lables_encoding(code):
