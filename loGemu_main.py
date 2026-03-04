@@ -3,9 +3,11 @@ import re
 import threading
 import pygame
 import time
+import sys
 from pathlib import Path
 from pixel_window import PixelWindow
 from ascii_keyboard import ASCIIKeyboard
+
 kb = ASCIIKeyboard()
 kb.start()
 main_file = "main_code.txt"
@@ -32,10 +34,16 @@ registers = {
     "8":0,
     "9":0,
     "10":0,
+    "11":0,
     "12":0,
     "13":0,
     "14":0,
-    "15":0
+    "15":0,
+    "16":0,
+    "17":0,
+    "18":0,
+    "19":0,
+    "20":0
     
     
 }
@@ -62,8 +70,8 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         str_col2 = old_count
     else:str_col2 = 0
   
-    
-    print("emulation.console:\n")
+    if main_branch == True:
+        print("\nemulation.console:\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
         if programmer_mod == True:
@@ -86,7 +94,11 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             pass
         if opcode == "orp":
             if prt7 == "4":
-               print(chr(registers[prt6]), end="", flush=True)
+                if registers[prt6] == 8:
+                    sys.stdout.write("\b \b")
+                    sys.stdout.flush()
+                else:
+                    print(chr(registers[prt6]), end="", flush=True)
             if prt7 == "5":
                 print(f"reg:{prt6}", registers[prt6])
             if prt7 == "1":
@@ -101,8 +113,11 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         if opcode == "onp":
             if prt7 == "2":
                 if prt6 == "1":
-                    print(f"terminal: {charbuff}")
+                    print(f"\nterminal: {charbuff}")
+                    charbuff = ""
                     pass
+                if prt6 == "2":
+                    charbuff = ""
             if prt7 == "3":
                 if prt6 == "2":
                     win.fill(0)
@@ -127,7 +142,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         if opcode == "dvi":
             registers[prt5] = registers[prt7] / int(prt6)
         if opcode == "ldi":
-            registers[prt5] = float(prt6)
+            registers[prt5] = int(prt6)
 
         if opcode == "sbi":
             registers[prt5] = registers[prt7] - int(prt6)
@@ -231,29 +246,35 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
                 symb_c =- 1
 
         if opcode == "rwm":
-            ram[registers[prt7]] = registers[prt6]
+            ram[registers[prt6]] = registers[prt7]
         if opcode == "crg":
             registers = {
-                "0":0,
-                "1":0,
-                "2":0,
-                "3":0,
-                "4":0,
-                "5":0,
-                "6":0,
-                "7":0,
-                "8":0,
-                "9":0,
-                "10":0,
-                "12":0,
-                "13":0,
-                "14":0,
-                "15":0   
+                    "0":0,
+                    "1":0,
+                    "2":0,
+                    "3":0,
+                    "4":0,
+                    "5":0,
+                    "6":0,
+                    "7":0,
+                    "8":0,
+                    "9":0,
+                    "10":0,
+                    "11":0,
+                    "12":0,
+                    "13":0,
+                    "14":0,
+                    "15":0,
+                    "16":0,
+                    "17":0,
+                    "18":0,
+                    "19":0,
+                    "20":0
             }
         if opcode == "non":
             pass
         if opcode == "hlt":
-            print("success execute!")
+            print("\nsuccess execute!")
             executing = True
             exit()
         if opcode == "jmp":
