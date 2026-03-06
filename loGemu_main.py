@@ -48,7 +48,7 @@ registers = {
     
 }
 ram = []
-ram = np.zeros(2048, dtype=int)
+ram = np.zeros(131072, dtype=int)
 
 
 W, H = 64, 64
