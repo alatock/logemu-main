@@ -10,10 +10,10 @@ from ascii_keyboard import ASCIIKeyboard
 
 kb = ASCIIKeyboard()
 kb.start()
-main_file = "main_code.txt"
+main_file = "main.txt"
 
 runfile = Path(__file__).parent
-exec_file = runfile / main_file
+exec_file = runfile / "rmdc" /"main.txt"
 with open (exec_file, "r", encoding= 'utf-8') as file:
     code = file.readlines()
     pass
@@ -22,6 +22,8 @@ programmer_mod = False
 
 labels = {}
 
+call_stack = {}
+counter_stack = {}
 registers = {
     "0":0,
     "1":0,
@@ -62,16 +64,15 @@ win = PixelWindow(64, 64, scale=8)
 matrix = np.zeros((64, 64), dtype=int)
 
 main_branch = True
+push_addr = 0
 
 def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump):
     executing = False
     global main_branch
-    if main_branch == True:
-        str_col2 = old_count
-    else:str_col2 = 0
-  
-    if main_branch == True:
-        print("\nemulation.console:\n")
+    global push_addr
+    str_col2 = old_count
+    if programmer_mod == True:
+        print(f"\nfile:{sys_jump}\n")
     while executing == False and str_col2 < len(code):
         line = code[str_col2]
         if programmer_mod == True:
@@ -155,33 +156,48 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 = labels[label_jump]
             pass
         if opcode == "gmp":
-            sys_jump = re.search(r"\{([A-Za-z0-9._]+)\}", line)
-            sys_jump = sys_jump.group(1)
-            sys_jump = str(sys_jump)
-            if sys_jump == "main":
-                if programmer_mod == True:
-                    print("sc main")
-                exec_file = runfile / main_file
-                main_branch = True
-                old_count = old_count
-                with open (exec_file, "r", encoding= 'utf-8') as file:
+            sh_jump = re.search(r"\{([A-Za-z0-9._]+)\}", line)
+            sh_jump = str(sh_jump.group(1))
+            if sh_jump == "return":
+                if push_addr >= 0:
+                    # Извлекаем сохраненное состояние из стека
+                    stack_frame = call_stack[push_addr]
+                    sys_jump = stack_frame['file_name']
+                    str_col2 = stack_frame['return_line']
+                    exec_file = runfile / "rmdc" / sys_jump
+                    with open(exec_file, "r", encoding='utf-8') as file:
                         code = file.readlines()
-                        pass
+                    lables_encoding(code)
+                    program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, str_col2, sys_jump)
+                    push_addr -= 1
+                else:
+                    # Ошибка: попытка возврата из пустого стека
+                    raise IndexError("Stack Underflow: return without call")
             else:
+                # Сохраняем текущее состояние перед переходом
+                push_addr += 1
+                call_stack[push_addr] = {
+                    'file_name': sys_jump,
+                    'return_line': str_col2 + 1, # Сохраняем номер строки для возврата
+                }
                 if programmer_mod == True:
-                    print("sc glob")
-                if main_branch == True:
-                    old_count = str_col2 + 1
-                else:old_count = 0
-                exec_file = runfile / 'rmdc' / sys_jump
-                if programmer_mod == True:
-                    print(exec_file)
-                main_branch = False
-                with open (exec_file, "r", encoding= 'utf-8') as file:
+                    print(call_stack[push_addr])
+                # Определяем цель перехода
+                match = re.search(r"\{([A-Za-z0-9._]+)\}", line)
+                if match:
+                    sys_jump = str(match.group(1))
+                    exec_file = runfile / "rmdc" / sys_jump
+                    
+                    with open(exec_file, "r", encoding='utf-8') as file:
                         code = file.readlines()
-                        pass
-            lables_encoding(code)
-            program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump)
+                    
+                    # Сбрасываем счетчик строк для нового файла
+                    str_col2 = 0
+                    lables_encoding(code)
+                    program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, str_col2, sys_jump)
+                else:
+                    raise ValueError("Invalid jump target format")
+
         if opcode == "mov":
             registers[prt5] = registers[prt7]
         if opcode == "brh":
@@ -283,7 +299,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 += 1
         time.sleep(0.0000001)
         if programmer_mod == True:
-                time.sleep(0.4)
+                time.sleep(0.01)
 
         
 def lables_encoding(code):
@@ -318,7 +334,7 @@ if __name__=='__main__':
 
          # 2. Подготавливаем данные для эмулятора
          old_count = 0
-         sys_jump = ""
+         sys_jump = "main.txt"
          lables_encoding(code)
      
          # 3. Запускаем эмулятор в побочном потоке
