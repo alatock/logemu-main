@@ -11,12 +11,9 @@ class PixelWindow:
         self.running = True
         self._lock = threading.Lock()
         
-        # Матрица данных
+        # Внутренняя матрица по умолчанию
         self.matrix = np.zeros((height, width), dtype=np.uint8)
 
-        # Запускаем Pygame в главном потоке, а для управления логикой 
-        # (если нужно) можно создать отдельный поток. 
-        # Но отрисовку оставим здесь.
         self._init_pygame(title)
 
     def _init_pygame(self, title):
@@ -26,28 +23,27 @@ class PixelWindow:
         self.surface = pygame.Surface((self.width, self.height))
         self.clock = pygame.time.Clock()
 
-    def set_pixel(self, x, y, value):
-        if 0 <= x < self.width and 0 <= y < self.height:
-            with self._lock:
-                self.matrix[y, x] = 1 if value else 0
-
-    def fill(self, value):
-        with self._lock:
-            self.matrix[:, :] = 1 if value else 0
-
-    def render(self):
-        """Метод отрисовки — вызывается ТОЛЬКО в основном цикле"""
+    def render(self, external_matrix=None):
+        """
+        Метод отрисовки. 
+        Если передана external_matrix, она копируется во внутренний буфер.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
         with self._lock:
-            # Создаем RGB массив. В Pygame surfarray использует (X, Y)
-            # Транспонируем матрицу, чтобы она соответствовала осям Pygame
+            # Если пришла новая матрица из вызывающего файла — обновляем внутреннюю
+            if external_matrix is not None:
+                # Важно: приводим к типу uint8, если переданы bool или float
+                self.matrix = np.array(external_matrix, dtype=np.uint8)
+
+            # Превращаем 0/1 в 0/255 и создаем RGB (3 канала)
+            # .T нужен, так как surfarray ожидает (width, height)
             rgb_matrix = np.stack([self.matrix.T * 255] * 3, axis=-1)
             pygame.surfarray.blit_array(self.surface, rgb_matrix)
 
-        # Масштабируем и выводим
+        # Масштабирование и вывод на экран
         scaled = pygame.transform.scale(
             self.surface, 
             (self.width * self.scale, self.height * self.scale)
@@ -56,27 +52,10 @@ class PixelWindow:
         pygame.display.flip()
 
     def run(self):
-        """Основной цикл приложения"""
+        """Стандартный цикл, если не передаем матрицу извне вручную"""
         while self.running:
             self.render()
             self.clock.tick(self.fps)
         pygame.quit()
 
-# Пример использования:
-if __name__ == "__main__":
-    win = PixelWindow(64, 64, scale=8)
-    
-    # Можно запустить поток, который будет что-то рисовать в фоне
-    def background_logic():
-        x = 0
-        while win.running:
-            win.set_pixel(x % 64, 32, 1)
-            x += 1
-            import time
-            time.sleep(0.05)
 
-    logic_thread = threading.Thread(target=background_logic, daemon=True)
-    logic_thread.start()
-
-    # Основной поток занят только окном
-    win.run()

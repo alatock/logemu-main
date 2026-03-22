@@ -160,7 +160,6 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             sh_jump = str(sh_jump.group(1))
             if sh_jump == "return":
                 if push_addr >= 0:
-                    # Извлекаем сохраненное состояние из стека
                     stack_frame = call_stack[push_addr]
                     sys_jump = stack_frame['file_name']
                     str_col2 = stack_frame['return_line']
@@ -186,6 +185,8 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
                 match = re.search(r"\{([A-Za-z0-9._]+)\}", line)
                 if match:
                     sys_jump = str(match.group(1))
+                    if sys_jump == "dump":
+                        sys_jump = str(registers[prt7]) + ".txt"
                     exec_file = runfile / "rmdc" / sys_jump
                     
                     with open(exec_file, "r", encoding='utf-8') as file:
