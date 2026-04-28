@@ -22,7 +22,6 @@ class PixelWindow:
         pygame.display.set_caption(title)
         self.surface = pygame.Surface((self.width, self.height))
         self.clock = pygame.time.Clock()
-
     def render(self, external_matrix=None):
         """
         Метод отрисовки. 

@@ -1,5 +1,4 @@
 sht (0)(0)(0)(0){SHIFT}
-onp (0)(0)(2)(3)              CLEAR MN
 brp (0)(0)(5)(3){LB11}        XI>XII
 sub (0)(9)(3)(5)              DX
 jmp (0)(0)(0)(0){LB1}

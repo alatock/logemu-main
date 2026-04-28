@@ -66,6 +66,9 @@ matrix = np.zeros((64, 64), dtype=int)
 main_branch = True
 push_addr = 0
 
+
+
+
 def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main_file, old_count, sys_jump):
     executing = False
     global main_branch
@@ -299,6 +302,7 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
         else:
             str_col2 += 1
         time.sleep(0.0000001)
+
         if programmer_mod == True:
                 time.sleep(0.01)
 
