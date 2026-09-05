@@ -74,6 +74,13 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
     global main_branch
     global push_addr
     str_col2 = old_count
+    
+    # Оптимизация: система таймингов для 10 МГц
+    TARGET_IPS = 10_000_000  # 10 миллионов инструкций в секунду (в 10 раз медленнее)
+    BATCH_SIZE = 10000  # Проверяем время каждые 10000 инструкций
+    instruction_count = 0
+    start_time = time.time()
+    
     if programmer_mod == True:
         print(f"\nfile:{sys_jump}\n")
     while executing == False and str_col2 < len(code):
@@ -301,10 +308,22 @@ def program_encoding(code, registers, ram, x, y, charbuff, matrix, runfile, main
             str_col2 = str_col2
         else:
             str_col2 += 1
-        time.sleep(0.0000001)
+        
+        # Оптимизированная система задержек
+        instruction_count += 1
+        
+        # Проверяем время каждые BATCH_SIZE инструкций
+        if instruction_count % BATCH_SIZE == 0:
+            elapsed = time.time() - start_time
+            expected = instruction_count / TARGET_IPS
+            
+            # Если мы опережаем расписание, подождём
+            if elapsed < expected:
+                time.sleep(expected - elapsed)
 
         if programmer_mod == True:
-                time.sleep(0.01)
+                time.sleep(0.1)
+
 
         
 def lables_encoding(code):
@@ -357,6 +376,6 @@ if __name__=='__main__':
      
          while win.running:
              win.render()
-             clock.tick(1000)  # Ограничиваем FPS интерфейса, чтобы не грузить CPU
+             clock.tick(100)  # Ограничиваем FPS интерфейса, чтобы не грузить CPU
      
          pygame.quit()
